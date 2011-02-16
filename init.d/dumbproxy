@@ -1,0 +1,63 @@
+#!/bin/sh
+#
+# Starts/stops nginx-lounge
+#
+# processname: dumbproxy
+# 
+# chkconfig: 2345 90 14
+# A modified version of NGINX that handles sharding and failover of a couch cluster.
+
+pidfile=/var/run/lounge/nginx.pid
+
+if [ -f /etc/rc.d/init.d/functions ]; then
+	. /etc/rc.d/init.d/functions
+	START="daemon"
+	STOP="killproc -d 10"
+	STATUS="status -p $pidfile"
+else
+	. /lib/lsb/init-functions
+	START="start-stop-daemon --start --exec"
+	STOP="start-stop-daemon --stop --exec"
+	STATUS="status_of_proc -p $pidfile"
+fi
+
+start() {
+	echo -n $"Starting Lounge Dumbproxy (NGINX): "
+	$START /usr/bin/nginx-lounge
+	RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping Lounge Dumbproxy (NGINX): "
+	$STOP /usr/bin/nginx-lounge
+	RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+	start)
+	start
+	;;
+	stop)
+	stop
+	;;
+	restart)
+	stop
+	start
+	;;
+	status)
+	$STATUS nginx-lounge
+	;;
+	condrestart)
+	;;
+	reload)
+	;;
+	*)
+	echo $"Usage: $0 {start|stop|restart|condrestart|reload}"
+	;;
+esac
+exit $RETVAL

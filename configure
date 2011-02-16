@@ -1,0 +1,32 @@
+#!/bin/sh
+
+install_prefix="/var/lounge/"
+
+MODULES="--add-module=`pwd`/nginx_lounge_module"
+
+PREFIX="--prefix=/usr/nginx-lounge"
+SBIN="--sbin-path=/usr/bin/nginx-lounge"
+CONF="--conf-path=/etc/lounge/nginx/nginx.conf"
+ACCESS_LOG="--http-log-path=/var/log/lounge/nginx-access.log"
+ERROR_LOG="--error-log-path=/var/log/lounge/nginx-error.log"
+PID="--pid-path=/var/run/lounge/nginx.pid"
+LOCK="--lock-path=/var/lock/nginx-lounge.lock"
+
+JSON_CFLAGS=`pkg-config --cflags json`
+export CFLAGS="$CFLAGS $JSON_CFLAGS"
+
+if [ ! -d nginx ]
+then
+	tar xvzf nginx_src/nginx-0.7.22.tar.gz
+	ln -sf nginx-0.7.22 nginx
+fi
+
+if [ ! -d nginx ]
+then
+	echo "Can't untar the nginx src!"
+	exit
+fi
+
+cd nginx
+./configure $PREFIX $SBIN $CONF $ACCESS_LOG $ERROR_LOG $PID $LOCK $MODULES
+cd ..

@@ -1,0 +1,11 @@
+/var/log/lounge/nginx-error.log /var/log/lounge/nginx/access.log {
+	rotate 5
+	compress
+	daily
+	notifempty
+	missingok
+	sharedscripts
+	lastaction
+		kill -USR1 $( cat /var/run/lounge/nginx.pid ) || true
+	endscript
+}
