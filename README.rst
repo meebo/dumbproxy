@@ -9,6 +9,8 @@ The same hash function is the same as used by BigCouch_.
 
 The lounge module depends on json-c_.
 
+Install
+
 LICENSE
 -------
 
@@ -24,5 +26,6 @@ This product also includes the following third-party components:
 .. _CouchDB-Lounge: https://github.com/meebo/couchdb-lounge
 .. _CouchDB: http://couchdb.apache.org/
 .. _smartproxy: https://github.com/meebo/smartproxy
+.. _BigCouch: https://cloudant.com/
 .. _json-c: http://oss.metaparadigm.com/json-c/
 .. _LICENSE: https://github.com/meebo/dumbproxy/blob/master/LICENSE
