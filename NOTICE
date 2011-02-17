@@ -1,0 +1,8 @@
+dumbproxy
+Copyright 2011 Meebo
+
+This project includes software developed at Meebo.
+
+Dumbproxy was developed by Shaun Lindsay for Meebo.com, with thanks to Evan
+Miller for his "Nginx development guide" and nginx_upstream_hash module.
+

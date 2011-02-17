@@ -14,8 +14,8 @@ Install
 LICENSE
 -------
 
-CouchDB-Lounge (including component subprojects) are licensed under the Apache License
-Please see the LICENSE_ file for details.
+CouchDB-Lounge (including component subprojects) are licensed under the Apache License.
+Please see the LICENSE_ and NOTICE_ files for details.
 
 This product also includes the following third-party components:
 
@@ -29,3 +29,4 @@ This product also includes the following third-party components:
 .. _BigCouch: https://cloudant.com/
 .. _json-c: http://oss.metaparadigm.com/json-c/
 .. _LICENSE: https://github.com/meebo/dumbproxy/blob/master/LICENSE
+.. _NOTICE: https://github.com/meebo/dumbproxy/blob/master/NOTICE
