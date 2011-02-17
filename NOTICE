@@ -6,3 +6,8 @@ This project includes software developed at Meebo.
 Dumbproxy was developed by Shaun Lindsay for Meebo.com, with thanks to Evan
 Miller for his "Nginx development guide" and nginx_upstream_hash module.
 
+This product also includes the following third-party components:
+
+ * nginx (http://nginx.net/)
+
+ Copyright 2002-2008, Igor Sysoev
