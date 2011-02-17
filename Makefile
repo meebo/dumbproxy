@@ -1,4 +1,4 @@
-.PHONY: all clean install dumbproxy tags
+.PHONY: all clean install dumbproxy tags rpm
 
 all: dumbproxy
 
