@@ -6,10 +6,10 @@ URL: http://tilgovi.github.com/couchdb-lounge
 License: None
 Group: Lounge
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-Conflicts: lounge-dumbproxy1
 Provides: lounge-dumbproxy = %{version}
 Obsoletes: lounge-dumbproxy < 2.1
 Obsoletes: lounge-dumbproxy-transitional
+Obsoletes: lounge-dumpproxy1
 
 %description
 A modified version of NGINX that handles sharding and failover of a couch cluster.
