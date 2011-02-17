@@ -15,6 +15,12 @@ LICENSE
 CouchDB-Lounge (including component subprojects) are licensed under the Apache License
 Please see the LICENSE_ file for details.
 
+This product also includes the following third-party components:
+
+ * nginx
+
+   Copyright 2002-2008, Igor Sysoev
+
 .. _CouchDB-Lounge: https://github.com/meebo/couchdb-lounge
 .. _CouchDB: http://couchdb.apache.org/
 .. _smartproxy: https://github.com/meebo/smartproxy
