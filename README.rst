@@ -9,7 +9,10 @@ The same hash function is the same as used by BigCouch_.
 
 The lounge module depends on json-c_.
 
-Install
+Installation
+------------
+
+Please see the installation instructions for the CouchDB-Lounge_ project.
 
 LICENSE
 -------
