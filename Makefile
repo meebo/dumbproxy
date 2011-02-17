@@ -16,6 +16,11 @@ install:
 dumbproxy:
 	$(MAKE) -C nginx
 
+rpm:
+	mkdir -p build
+	rpmbuild --define="_builddir build" -v -bb rpm/dumbproxy.spec
+	rm -rf build
+
 tags:
 	ctags -R *
 	cscope -Rb
