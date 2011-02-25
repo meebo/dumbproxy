@@ -1,11 +1,12 @@
 #!/bin/sh
 #
-# Starts/stops nginx-lounge
+# starts/stops nginx-lounge
 #
 # processname: dumbproxy
-# 
 # chkconfig: 2345 90 14
-# A modified version of NGINX that handles sharding and failover of a couch cluster.
+# description: An NGINX that handles sharding and failover of a couch cluster.
+#
+#
 
 pidfile=/var/run/lounge/nginx.pid
 
