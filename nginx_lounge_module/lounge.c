@@ -19,6 +19,9 @@ limitations under the License.
 #include <ngx_http.h>
 #include <json.h>
 
+#include <time.h>
+#include <math.h>
+
 #define LOUNGE_PROXY_NODES_KEY "nodes"
 #define LOUNGE_PROXY_SHARDMAP_KEY "shard_map"
 
@@ -57,6 +60,7 @@ typedef struct {
 	ngx_uint_t           try_i;
 	lounge_peer_t        **addrs;
 	ngx_uint_t           num_peers;
+	ngx_uint_t           failed_peers;
 } lounge_proxy_peer_data_t;
 
 typedef struct {
@@ -721,6 +725,7 @@ lounge_proxy_init_peer(ngx_http_request_t *r,
     lounge_proxy_peer_data_t     	*lpd;
 	lounge_main_conf_t 				*lmcf;	
 	lounge_req_ctx_t 				*ctx;
+	int                             i;
 
 	ctx = ngx_http_get_module_ctx(r, lounge_module);
 	if (!ctx) return NGX_ERROR;
@@ -741,12 +746,31 @@ lounge_proxy_init_peer(ngx_http_request_t *r,
 	lpd->addrs = lmcf->lookup_table.shard_id_peers[lpd->shard_id];
 	lpd->num_peers = lmcf->lookup_table.num_peers[lpd->shard_id];
 
+	/* Check the peer list for any that have failed previously but should
+	 * be tried again now. Keep track of how many are currently marked as
+	 * failed. If all have failed, we just try them in order and hope for
+	 * the best. This prevents us from aggressively blacklisting ourselves
+	 * into a 503 situation inside lounge_proxy_get_peer().
+	 */
+	lpd->failed_peers = 0;
+	time_t now = time(NULL);
+	for (i = 0 ; i < lpd->num_peers ; i++) {
+		if (lpd->addrs[i]->fail_retry_time) {
+			if (now > lpd->addrs[i]->fail_retry_time) {
+				/* the failure was old -- try this host again */
+				lpd->addrs[i]->fail_retry_time = 0;
+			} else {
+				lpd->failed_peers++;
+			}
+		}
+	}
+
 	/* setup callbacks */
     r->upstream->peer.free = lounge_proxy_free_peer;
     r->upstream->peer.get = lounge_proxy_get_peer;
 
-	/* set maximum number of retries */
-	r->upstream->peer.tries = lmcf->lookup_table.num_peers[lpd->shard_id];
+	/* set maximum number of retries to the number of peers */
+    r->upstream->peer.tries = lpd->num_peers;
 
     r->upstream->peer.data = lpd;
     return NGX_OK;
@@ -767,25 +791,23 @@ lounge_proxy_get_peer(ngx_peer_connection_t *pc, void *data)
     pc->cached = 0;
     pc->connection = NULL;
 
-	int id = lpd->current_host_id;
-	lp = lpd->addrs[id];
+	while (lpd->current_host_id < lpd->num_peers) {
+	    lp = lpd->addrs[lpd->current_host_id];
 
-	if (lp->fail_retry_time) {
-		/* the node repeatedly failed some time previously, check if we're
-		 * past the retry timeout
-		 */
-		if (time(NULL) > lp->fail_retry_time) {
-			/* the failure was old -- try this host again */
-			lp->fail_retry_time = 0;
-		} else {
-			/* the failure was recent, just skip this host */
-			if (!--pc->tries) {
+		if (lp->fail_retry_time) {
+			if (lpd->failed_peers == lpd->num_peers) {
+				/* all peers are marked as bad so try anyway and pray */
+				break;
+			} else if (!--pc->tries) {
 				/* we have no more hosts to try!  fail. */
-				return NGX_ERROR;
+				return NGX_BUSY;
 			}
-			lp = lpd->addrs[++lpd->current_host_id];
+		} else {
+			/* try the first good host */
+			break;
 		}
-	}
+		lpd->current_host_id++;
+    }
 
 	peer = &lp->peer;
     pc->sockaddr = peer->sockaddr;
@@ -805,27 +827,23 @@ lounge_proxy_free_peer(ngx_peer_connection_t *pc, void *data,
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0, 
             "upstream_couch_proxy: free upstream hash peer try %u", pc->tries);
 
-	ngx_uint_t id = lpd->current_host_id;
-	lp = lpd->addrs[id];
-    if (state & (NGX_PEER_FAILED | NGX_PEER_NEXT) 
-			&& --pc->tries)
-    {
-		/* if this host has failed 10 times in a row, mark the time when we 
-		 * should retry it
-		 */
-		if (++lp->fail_count > 10) {
-			/* every time we fail, wait 30s more */
-			int retry_timeout = (lp->fail_count - 10) * 30;
-			retry_timeout = retry_timeout < FAILED_NODE_MAX_RETRY ?
-				retry_timeout : FAILED_NODE_MAX_RETRY;
-			lp->fail_retry_time = time(NULL) + retry_timeout;
-
-			ngx_log_error(NGX_LOG_ALERT, pc->log, 0,
-					"[%s] host %V failed %d times, removed for %d seconds",
-					__FUNCTION__, &lp->peer.name, lp->fail_count,
-					retry_timeout);
-		}
+	lp = lpd->addrs[lpd->current_host_id];
+	if (state & (NGX_PEER_FAILED | NGX_PEER_NEXT)) {
+		pc->tries--;
+		lp->fail_count++;
 		lpd->current_host_id++;
+
+		/* use a power function for a slower backoff than an exponential */
+		int retry_timeout = pow(lp->fail_count, 1.5);
+		/* and cap it*/
+		retry_timeout = retry_timeout < FAILED_NODE_MAX_RETRY ?
+			retry_timeout : FAILED_NODE_MAX_RETRY;
+		lp->fail_retry_time = time(NULL) + retry_timeout;
+
+		ngx_log_error(NGX_LOG_ALERT, pc->log, 0,
+					  "[%s] host %V failed %d times, removed for %d seconds",
+					  __FUNCTION__, &lp->peer.name, lp->fail_count,
+					  retry_timeout);
     } else {
 		/* proxy attempt was successful -- if there was a fail count, 
 		 * decrement it
