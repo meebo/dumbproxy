@@ -499,7 +499,7 @@ lounge_shard_rewrite(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 	    return NGX_CONF_ERROR;
     }
 
-    *code = (uintptr_t) NULL;
+    *code = NULL;
 
     regex->next = (u_char *) lcf->codes->elts + lcf->codes->nelts
                                               - (u_char *) regex;
@@ -629,7 +629,7 @@ lounge_proxy_build_peer_list(ngx_conf_t *cf, lounge_main_conf_t *lmcf, struct js
 	/* iterate through the available hosts, adding them to the peers array */
 	for (proxy_index = 0; proxy_index < num_proxies; proxy_index++) {
 		struct json_object *node, *_port;
-		char *host;
+		const char *host;
 		short port;
 		ngx_url_t *u;
 
