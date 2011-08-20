@@ -788,15 +788,15 @@ lounge_proxy_get_peer(ngx_peer_connection_t *pc, void *data)
 		}
 		lpd->failed_peers++;
 		lpd->current_host_id++;
-    }
+	}
 
 	lp = lpd->addrs[lpd->current_host_id % lpd->num_peers];
 	peer = &lp->peer;
-    pc->sockaddr = peer->sockaddr;
-    pc->socklen = peer->socklen;
-    pc->name = &peer->name;
+	pc->sockaddr = peer->sockaddr;
+	pc->socklen = peer->socklen;
+	pc->name = &peer->name;
 
-    return NGX_OK;
+	return NGX_OK;
 }
 
 static void
