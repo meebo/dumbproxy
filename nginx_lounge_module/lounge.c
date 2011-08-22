@@ -780,6 +780,7 @@ lounge_proxy_get_peer(ngx_peer_connection_t *pc, void *data)
 	 * This prevents us from blacklisting ourselves into a 503 situation.
 	 * Instead, we just try the peers in order and hope one recovers.
 	 */
+	lp = lpd->addrs[lpd->current_host_id % lpd->num_peers];
 	while (lpd->failed_peers < lpd->num_peers) {
 		if (lpd->start_time >= lp->fail_retry_time) {
 			/* this peer is good or the failure is old so try it */
@@ -788,9 +789,9 @@ lounge_proxy_get_peer(ngx_peer_connection_t *pc, void *data)
 		}
 		lpd->failed_peers++;
 		lpd->current_host_id++;
+		lp = lpd->addrs[lpd->current_host_id % lpd->num_peers];
 	}
 
-	lp = lpd->addrs[lpd->current_host_id % lpd->num_peers];
 	peer = &lp->peer;
 	pc->sockaddr = peer->sockaddr;
 	pc->socklen = peer->socklen;
