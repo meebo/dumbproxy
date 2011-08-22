@@ -829,11 +829,12 @@ lounge_proxy_free_peer(ngx_peer_connection_t *pc, void *data,
 					  retry_timeout);
     } else {
 		/* proxy attempt was successful -- if there was a fail count, 
-		 * decrement it
+		 * decrement it and set it to non-failed
 		 */
 		if (lp->fail_count) {
 			lp->fail_count--;
 		}
+		lp->fail_retry_time = 0; /* optimistic recovery */
 	}
 }
 
